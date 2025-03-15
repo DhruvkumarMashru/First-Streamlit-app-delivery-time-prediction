@@ -1,5 +1,6 @@
-streamlit  
-numpy  
-joblib  
-pandas  
-altair  
+python==3.10
+streamlit
+joblib
+scikit-learn
+numpy
+pandas
