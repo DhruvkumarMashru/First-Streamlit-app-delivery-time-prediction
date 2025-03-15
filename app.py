@@ -1,23 +1,24 @@
 import streamlit as st
 import pandas as pd
-import joblib
+import pickle
 import matplotlib.pyplot as plt
-import os
-import subprocess
+
+# Load the trained model safely
+model_path = "model.pkl"
+
+if not model_path or not isinstance(model_path, str):
+    st.error("Model file path is invalid!")
+    st.stop()
 
 try:
-    import joblib
-except ImportError:
-    subprocess.run(["pip", "install", "joblib"])
-    import joblib
+    with open(model_path, "rb") as f:
+        model = pickle.load(f)
+    expected_features = model.feature_names_in_
+except Exception as e:
+    st.error(f"Error loading model: {e}")
+    st.stop()
 
-
-# Load the trained model
-model = joblib.load("delivery_time_model.pkl")
-
-# Get expected feature names from the model
-expected_features = model.feature_names_in_
-
+# Prediction function
 def predict_delivery_time(product_category, customer_location, shipping_method):
     # Create an empty DataFrame with correct feature names
     input_data = pd.DataFrame(columns=expected_features)
@@ -36,27 +37,33 @@ def predict_delivery_time(product_category, customer_location, shipping_method):
     return predicted_time
 
 # Streamlit UI
+st.set_page_config(page_title="Delivery Time Predictor", page_icon="🚚", layout="wide")
+
 st.title("📦 Order Delivery Time Prediction")
+st.markdown("### Enter order details to get an estimated delivery time.")
 
-st.sidebar.header("Input Order Details")
-product_category = st.sidebar.selectbox("Product Category", ["Clothing", "Electronics", "Food", "Furniture"])
-customer_location = st.sidebar.selectbox("Customer Location", ["Urban", "Suburban", "Rural"])
-shipping_method = st.sidebar.selectbox("Shipping Method", ["Standard", "Express"])
+# Sidebar Inputs
+with st.sidebar:
+    st.header("📋 Input Order Details")
+    product_category = st.selectbox("Select Product Category", ["Clothing", "Electronics", "Food", "Furniture"])
+    customer_location = st.selectbox("Select Customer Location", ["Urban", "Suburban", "Rural"])
+    shipping_method = st.selectbox("Select Shipping Method", ["Standard", "Express"])
+    predict_button = st.button("🚀 Predict Delivery Time")
 
-if st.sidebar.button("Predict Delivery Time"):
+# Main Content
+if predict_button:
     try:
         prediction = predict_delivery_time(product_category, customer_location, shipping_method)
-        st.success(f"Estimated Delivery Time: {prediction:.2f} days")
+        st.success(f"🕒 Estimated Delivery Time: **{prediction:.2f} days**")
 
-        # Improved Visualization: Horizontal Bar Chart
-        fig, ax = plt.subplots()
+        # Visualization
+        fig, ax = plt.subplots(figsize=(6, 2))
         ax.barh(["Predicted Delivery Time"], [prediction], color='skyblue', height=0.4)
         ax.set_xlabel("Days")
         ax.set_title("Predicted Delivery Time Visualization")
 
-        # Adding the value label on the bar
-        for index, value in enumerate([prediction]):
-            ax.text(value, index, f"{value:.2f} days", va='center', fontsize=12, fontweight='bold', color='black')
+        # Add text on the bar
+        ax.text(prediction, 0, f"{prediction:.2f} days", va='center', fontsize=12, fontweight='bold')
 
         st.pyplot(fig)
 
