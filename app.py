@@ -1,13 +1,14 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import joblib
 import os
+import os
+os.system("pip install joblib")
+import joblib  # Now import joblib after installing it
 import altair as alt  
-
 import subprocess
-subprocess.run(["pip", "install", "--no-cache-dir", "joblib"])
-import joblib  # Now try importing
+subprocess.run(["pip", "list"])  # This will print all installed packages
+
 
 
 # ✅ Load the Model
