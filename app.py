@@ -1,10 +1,15 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import sys
 import os
-import os
-os.system("pip install joblib")
-import joblib  # Now import joblib after installing it
+os.system(f"{sys.executable} -m pip install --user joblib")
+
+import joblib  # Now it should import successfully
+import sys
+print("Python executable path:", sys.executable)
+print("Python version:", sys.version)
+
 import altair as alt  
 import subprocess
 subprocess.run(["pip", "list"])  # This will print all installed packages
