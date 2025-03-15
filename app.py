@@ -5,6 +5,11 @@ import joblib
 import os
 import altair as alt  
 
+import subprocess
+subprocess.run(["pip", "install", "--no-cache-dir", "joblib"])
+import joblib  # Now try importing
+
+
 # ✅ Load the Model
 model_path = "delivery_time_model.pkl"
 
