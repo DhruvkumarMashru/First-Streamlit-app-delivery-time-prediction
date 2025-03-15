@@ -2,6 +2,15 @@ import streamlit as st
 import pandas as pd
 import joblib
 import matplotlib.pyplot as plt
+import os
+import subprocess
+
+try:
+    import joblib
+except ImportError:
+    subprocess.run(["pip", "install", "joblib"])
+    import joblib
+
 
 # Load the trained model
 model = joblib.load("delivery_time_model.pkl")
