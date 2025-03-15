@@ -2,40 +2,54 @@ import streamlit as st
 import pandas as pd
 import joblib
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 # Load the trained model
 model = joblib.load("delivery_time_model.pkl")
 
-# Streamlit UI Setup
-st.set_page_config(page_title="Delivery Time Prediction", layout="wide")
-st.title("📦 Order Delivery Time Prediction")
-st.write("Enter order details to predict the estimated delivery time.")
+# Get expected feature names from the model
+expected_features = model.feature_names_in_
 
-# Sidebar for Inputs
-st.sidebar.header("Input Order Details")
-product_category = st.sidebar.selectbox("Product Category", ["Electronics", "Clothing", "Food", "Furniture"])
-customer_location = st.sidebar.selectbox("Customer Location", ["Urban", "Suburban", "Rural"])
-shipping_method = st.sidebar.selectbox("Shipping Method", ["Standard", "Express", "Same-day"])
-
-# Create a DataFrame for Prediction
-input_data = pd.DataFrame({
-    "Product_Category": [product_category],
-    "Customer_Location": [customer_location],
-    "Shipping_Method": [shipping_method]
-})
-
-# Make Prediction
-if st.sidebar.button("Predict Delivery Time"):
+def predict_delivery_time(product_category, customer_location, shipping_method):
+    # Create an empty DataFrame with correct feature names
+    input_data = pd.DataFrame(columns=expected_features)
+    input_data.loc[0] = 0  # Initialize with zeros
+    
+    # Set the correct feature flags (One-Hot Encoding)
+    if f"Product_Category_{product_category}" in input_data.columns:
+        input_data[f"Product_Category_{product_category}"] = 1
+    if f"Customer_Location_{customer_location}" in input_data.columns:
+        input_data[f"Customer_Location_{customer_location}"] = 1
+    if f"Shipping_Method_{shipping_method}" in input_data.columns:
+        input_data[f"Shipping_Method_{shipping_method}"] = 1
+    
+    # Predict delivery time
     predicted_time = model.predict(input_data)[0]
-    st.success(f"🕒 Expected Delivery Time: {predicted_time:.2f} days")
+    return predicted_time
 
-# Load Sample Data for Visualization
-data = pd.read_csv("order_data.csv")
+# Streamlit UI
+st.title("📦 Order Delivery Time Prediction")
 
-# Visualization: Distribution of Delivery Times
-st.subheader("📊 Delivery Time Distribution")
-fig, ax = plt.subplots()
-sns.histplot(data["Delivery_Time"], bins=20, kde=True, ax=ax)
-ax.set_xlabel("Delivery Time (Days)")
-st.pyplot(fig)
+st.sidebar.header("Input Order Details")
+product_category = st.sidebar.selectbox("Product Category", ["Clothing", "Electronics", "Food", "Furniture"])
+customer_location = st.sidebar.selectbox("Customer Location", ["Urban", "Suburban", "Rural"])
+shipping_method = st.sidebar.selectbox("Shipping Method", ["Standard", "Express"])
+
+if st.sidebar.button("Predict Delivery Time"):
+    try:
+        prediction = predict_delivery_time(product_category, customer_location, shipping_method)
+        st.success(f"Estimated Delivery Time: {prediction:.2f} days")
+
+        # Improved Visualization: Horizontal Bar Chart
+        fig, ax = plt.subplots()
+        ax.barh(["Predicted Delivery Time"], [prediction], color='skyblue', height=0.4)
+        ax.set_xlabel("Days")
+        ax.set_title("Predicted Delivery Time Visualization")
+
+        # Adding the value label on the bar
+        for index, value in enumerate([prediction]):
+            ax.text(value, index, f"{value:.2f} days", va='center', fontsize=12, fontweight='bold', color='black')
+
+        st.pyplot(fig)
+
+    except Exception as e:
+        st.error(f"Error: {e}")
